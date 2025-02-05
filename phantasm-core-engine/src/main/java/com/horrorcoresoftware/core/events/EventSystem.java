@@ -91,7 +91,7 @@ public class EventSystem {
     public void processEvents() {
         while (!eventQueue.isEmpty()) {
             EventData event = eventQueue.poll();
-            emitImmediate(event.getType(), event.getData());
+            emitImmediate(event.type(), event.data());
         }
     }
 
