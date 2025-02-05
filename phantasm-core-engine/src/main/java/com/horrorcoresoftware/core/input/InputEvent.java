@@ -1,4 +1,4 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.input;
 
 public class InputEvent {
     private final InputType type;

@@ -1,4 +1,4 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.resource;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

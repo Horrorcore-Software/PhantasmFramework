@@ -1,4 +1,4 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.input;
 
 public interface InputCallback {
     void onInput(InputEvent event);

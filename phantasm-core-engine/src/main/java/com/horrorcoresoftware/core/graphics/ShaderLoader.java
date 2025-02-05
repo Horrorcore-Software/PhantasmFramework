@@ -1,4 +1,6 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.graphics;
+
+import com.horrorcoresoftware.core.resource.ResourceLoader;
 
 import static org.lwjgl.opengl.GL20.*;
 

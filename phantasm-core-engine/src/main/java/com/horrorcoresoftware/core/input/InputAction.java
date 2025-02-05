@@ -1,4 +1,4 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.input;
 
 import java.util.Arrays;
 import java.util.List;

@@ -1,10 +1,10 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.resource;
 
 /**
  * Interface for resource loaders.
  * @param <T> The type of resource to load
  */
-interface ResourceLoader<T> {
+public interface ResourceLoader<T> {
     /**
      * Loads a resource from the specified path.
      * @param path The resource path

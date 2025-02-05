@@ -1,4 +1,4 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.resource;
 
 /**
  * Holds a resource and its reference count.

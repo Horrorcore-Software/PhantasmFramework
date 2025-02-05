@@ -1,8 +1,5 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.input;
 
-import com.horrorcoresoftware.core.InputCallback;
-import com.horrorcoresoftware.core.InputEvent;
-import com.horrorcoresoftware.core.InputTrigger;
 import org.lwjgl.glfw.GLFW;
 
 import java.nio.ByteBuffer;

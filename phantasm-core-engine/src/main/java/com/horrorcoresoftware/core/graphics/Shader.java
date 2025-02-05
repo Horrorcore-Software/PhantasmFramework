@@ -1,6 +1,5 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.graphics;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import java.util.HashMap;
 import java.util.Map;

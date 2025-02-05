@@ -1,11 +1,11 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.graphics;
 
 
+import com.horrorcoresoftware.core.resource.ResourceLoader;
 import org.lwjgl.system.MemoryStack;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.stb.STBImage.*;
 

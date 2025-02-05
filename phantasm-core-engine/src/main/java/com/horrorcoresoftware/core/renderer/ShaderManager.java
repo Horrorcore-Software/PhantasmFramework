@@ -1,7 +1,7 @@
 package com.horrorcoresoftware.core.renderer;
 
-import com.horrorcoresoftware.core.Shader;
-import com.horrorcoresoftware.core.ShaderLoader;
+import com.horrorcoresoftware.core.graphics.Shader;
+import com.horrorcoresoftware.core.graphics.ShaderLoader;
 
 import java.util.HashMap;
 import java.util.Map;

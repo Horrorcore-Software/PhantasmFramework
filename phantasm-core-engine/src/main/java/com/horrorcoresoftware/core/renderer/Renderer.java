@@ -1,11 +1,8 @@
 package com.horrorcoresoftware.core.renderer;
 
-import com.horrorcoresoftware.core.Window;
-import org.lwjgl.opengl.GL;
+import com.horrorcoresoftware.core.graphics.Window;
+
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30.*;
 
 /**
  * Manages the rendering pipeline and graphics state.

@@ -1,4 +1,4 @@
-package com.horrorcoresoftware.core;
+package com.horrorcoresoftware.core.config;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.Gson;

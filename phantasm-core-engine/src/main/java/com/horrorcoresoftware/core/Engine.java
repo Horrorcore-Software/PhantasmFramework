@@ -2,7 +2,10 @@ package com.horrorcoresoftware.core;
 
 import com.horrorcoresoftware.core.debug.Logger;
 import com.horrorcoresoftware.core.events.EventSystem;
+import com.horrorcoresoftware.core.graphics.Window;
+import com.horrorcoresoftware.core.input.InputManager;
 import com.horrorcoresoftware.core.renderer.Renderer;
+import com.horrorcoresoftware.core.resource.ResourceManager;
 import com.horrorcoresoftware.core.scene.Scene;
 import com.horrorcoresoftware.exceptions.EngineInitException;
 
