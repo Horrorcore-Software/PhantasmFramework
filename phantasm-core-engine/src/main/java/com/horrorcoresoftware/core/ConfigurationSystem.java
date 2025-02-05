@@ -1,10 +1,12 @@
 package com.horrorcoresoftware.core;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.Gson;
 import com.horrorcoresoftware.exceptions.ConfigurationException;
-import java.io.*;
+
 import java.util.*;
 import java.nio.file.*;
-import com.google.gson.*;
+
 
 /**
  * Manages engine and game configuration settings.
@@ -128,7 +130,7 @@ public class ConfigurationSystem {
 
         try {
             Path configFile = Paths.get(configPath, sectionName + ".json");
-            String json = gson.toJson(section.getValues());
+            String json = gson.toJson(section.values());
             Files.writeString(configFile, json);
         } catch (Exception e) {
             throw new ConfigurationException("Failed to save configuration section: " + sectionName, e);
@@ -231,10 +233,8 @@ public class ConfigurationSystem {
 /**
  * Represents a section of configuration settings.
  */
-class ConfigSection {
-    private final Map<String, Object> values;
-
-    public ConfigSection(Map<String, Object> values) {
+record ConfigSection(Map<String, Object> values) {
+    ConfigSection(Map<String, Object> values) {
         this.values = new HashMap<>(values);
     }
 
@@ -252,7 +252,8 @@ class ConfigSection {
         values.put(key, value);
     }
 
-    public Map<String, Object> getValues() {
+    @Override
+    public Map<String, Object> values() {
         return new HashMap<>(values);
     }
 }
@@ -267,18 +268,5 @@ interface ConfigChangeListener {
 /**
  * Event class for configuration changes.
  */
-class ConfigChangeEvent {
-    private final String path;
-    private final Object oldValue;
-    private final Object newValue;
-
-    public ConfigChangeEvent(String path, Object oldValue, Object newValue) {
-        this.path = path;
-        this.oldValue = oldValue;
-        this.newValue = newValue;
-    }
-
-    public String getPath() { return path; }
-    public Object getOldValue() { return oldValue; }
-    public Object getNewValue() { return newValue; }
+record ConfigChangeEvent(String path, Object oldValue, Object newValue) {
 }
