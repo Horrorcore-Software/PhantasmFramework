@@ -93,4 +93,7 @@ public class Scene {
         gameObjectsMap.clear();
         isActive = false;
     }
+
+    public void fixedUpdate(double fixedTimeStep) {
+    }
 }

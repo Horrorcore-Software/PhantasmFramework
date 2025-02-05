@@ -103,4 +103,7 @@ public class Window {
     public int getHeight() { return height; }
     public boolean isResized() { return resized; }
     public void setResized(boolean resized) { this.resized = resized; }
+
+    public void swapBufffers() {
+    }
 }
