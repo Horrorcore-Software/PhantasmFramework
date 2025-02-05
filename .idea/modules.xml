@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/phantasm-core-engine.iml" filepath="$PROJECT_DIR$/phantasm-core-engine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/phantasm-core-engine.main.iml" filepath="$PROJECT_DIR$/.idea/modules/phantasm-core-engine.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/phantasm-core-engine.test.iml" filepath="$PROJECT_DIR$/.idea/modules/phantasm-core-engine.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/phantasm-framework.iml" filepath="$PROJECT_DIR$/phantasm-framework.iml" />
+    </modules>
+  </component>
+</project>

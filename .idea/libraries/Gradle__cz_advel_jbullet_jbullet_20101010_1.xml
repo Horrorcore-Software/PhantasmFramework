@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="Gradle: cz.advel.jbullet:jbullet:20101010-1" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="cz.advel.jbullet" artifactId="jbullet" version="20101010-1" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/cz.advel.jbullet/jbullet/20101010-1/63618e3da195da9b549f20ca01fe8ee2147eeb75/jbullet-20101010-1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
