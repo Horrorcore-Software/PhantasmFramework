@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: org.jmonkeyengine:jme3-core:3.5.2-stable" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="org.jmonkeyengine" artifactId="jme3-core" version="3.5.2-stable" />
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jmonkeyengine/jme3-core/3.5.2-stable/fe2b20c9d088d1d2bcbe08abba9311df2f2dee7a/jme3-core-3.5.2-stable.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jmonkeyengine/jme3-core/3.5.2-stable/34d3e0d3f154b32c3af27e0286198ed332aac530/jme3-core-3.5.2-stable-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
