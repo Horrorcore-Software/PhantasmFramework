@@ -1,4 +1,4 @@
-    package com.horrorcoresoftware.core.config;
+package com.horrorcoresoftware.core.config;
 
 import java.util.HashMap;
 import java.util.Map; /**
