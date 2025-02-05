@@ -1,6 +1,8 @@
 package com.horrorcoresoftware.core;
 
 
+import com.horrorcoresoftware.core.renderer.Renderer;
+import com.horrorcoresoftware.core.scene.Scene;
 import com.horrorcoresoftware.exceptions.EngineInitException;
 
 /**
@@ -12,6 +14,8 @@ public class Engine {
     private Timer timer;
     private InputManager inputManager;
     private ResourceManager resourceManager;
+    private Renderer renderer;
+    private Scene currentScene;
 
     /**
      * Initializes the engine with default configuration.
@@ -30,6 +34,14 @@ public class Engine {
     public void initialize() throws EngineInitException {
         window = new Window("Phantasm Framework", 1280, 720);
         window.initialize();
+        renderer = new Renderer(window);
+        try {
+            renderer.initialize();
+        } catch (Exception e) {
+            throw new EngineInitException("Failed to initialize renderer", e);
+        }
+        currentScene = new Scene();
+        currentScene.initialize();
         inputManager.initialize(window);
         resourceManager.initialize();
     }
@@ -87,6 +99,7 @@ public class Engine {
      */
     private void update(double delta) {
         inputManager.update();
+        currentScene.update(delta);
         // Additional system updates will be added here
     }
 
@@ -94,14 +107,37 @@ public class Engine {
      * Renders the current frame.
      */
     private void render() {
-        // Rendering code will be added here
+        renderer.beginFrame();
+
+        // Your rendering code will go here
+        // For example:
+        // renderer.getShaderManager().useShader("default");
+        // renderer.renderScene(scene);
+
+        renderer.endFrame();
     }
 
     /**
      * Cleans up resources and shuts down the engine.
      */
     private void cleanup() {
+        if (currentScene != null) {
+            currentScene.cleanup();
+        }
+        renderer.cleanup();
         window.dispose();
         resourceManager.cleanup();
+    }
+
+    public void setScene(Scene newScene) {
+        if (currentScene != null) {
+            currentScene.cleanup();
+        }
+        currentScene = newScene;
+        currentScene.initialize();
+    }
+
+    public Scene getCurrentScene() {
+        return currentScene;
     }
 }
