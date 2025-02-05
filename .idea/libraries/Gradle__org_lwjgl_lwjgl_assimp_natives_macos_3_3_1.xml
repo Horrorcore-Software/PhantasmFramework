@@ -5,6 +5,8 @@
       <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-assimp/3.3.1/97e88bb1a65170444dbd5c3edbd716edeb219f95/lwjgl-assimp-3.3.1-natives-macos.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-assimp/3.3.1/c4a6b167a8e6b6a24a98eb71a3f0eeb0f71c24e2/lwjgl-assimp-3.3.1-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

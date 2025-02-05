@@ -44,6 +44,7 @@ dependencies {
     implementation("com.badlogicgames.gdx:gdx:1.11.0")
     implementation("com.badlogicgames.gdx:gdx-backend-lwjgl3:1.11.0")
     implementation("com.badlogicgames.gdx:gdx-platform:1.11.0:natives-desktop")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
