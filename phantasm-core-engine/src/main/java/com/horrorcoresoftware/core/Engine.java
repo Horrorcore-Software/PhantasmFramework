@@ -68,7 +68,6 @@ public class Engine {
             }
 
             // Initialize other systems
-            inputManager.initialize(window);
             resourceManager.initialize();
 
             // Create initial scene

@@ -1,86 +1,117 @@
 package com.horrorcoresoftware.core;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.horrorcoresoftware.core.InputCallback;
+import com.horrorcoresoftware.core.InputEvent;
+import com.horrorcoresoftware.core.InputTrigger;
+import org.lwjgl.glfw.GLFW;
 
-import static org.lwjgl.glfw.GLFW.*;
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Manages input handling for keyboard and mouse events.
- */
 public class InputManager {
-    private Map<Integer, Boolean> keyStates;
-    private Map<Integer, Boolean> mouseButtonStates;
+    private final Map<String, InputAction> actions;
+    private final Map<Integer, Boolean> keyStates;
+    private final Map<Integer, Boolean> mouseButtonStates;
+    private final Map<Integer, Float> axisValues;
+    private final Queue<InputEvent> eventQueue;
+    private final Set<Integer> activeGamepads;
+
     private double mouseX, mouseY;
     private double scrollX, scrollY;
+    private boolean inputEnabled;
 
-    /**
-     * Creates a new input manager.
-     */
     public InputManager() {
-        keyStates = new HashMap<>();
-        mouseButtonStates = new HashMap<>();
+        this.actions = new ConcurrentHashMap<>();
+        this.keyStates = new HashMap<>();
+        this.mouseButtonStates = new HashMap<>();
+        this.axisValues = new HashMap<>();
+        this.eventQueue = new LinkedList<>();
+        this.activeGamepads = new HashSet<>();
+        this.inputEnabled = true;
     }
 
-    /**
-     * Initializes input callbacks for the specified window.
-     * @param window The window to handle input for
-     */
-    public void initialize(Window window) {
-        long windowHandle = window.getWindowHandle();
-
-        // Keyboard callback
-        glfwSetKeyCallback(windowHandle, (win, key, scancode, action, mods) -> {
-            keyStates.put(key, action != GLFW_RELEASE);
-        });
-
-        // Mouse button callback
-        glfwSetMouseButtonCallback(windowHandle, (win, button, action, mods) -> {
-            mouseButtonStates.put(button, action != GLFW_RELEASE);
-        });
-
-        // Cursor position callback
-        glfwSetCursorPosCallback(windowHandle, (win, xpos, ypos) -> {
-            mouseX = xpos;
-            mouseY = ypos;
-        });
-
-        // Scroll callback
-        glfwSetScrollCallback(windowHandle, (win, xoffset, yoffset) -> {
-            scrollX = xoffset;
-            scrollY = yoffset;
-        });
+    public void createAction(String name, InputTrigger... triggers) {
+        actions.put(name, new InputAction(name, triggers));
     }
 
-    /**
-     * Updates the input state.
-     */
     public void update() {
-        scrollX = 0;
-        scrollY = 0;
+        if (!inputEnabled) return;
+
+        // Process gamepad input
+        activeGamepads.forEach(gamepad -> {
+            updateGamepadState(gamepad);
+        });
+
+        // Process queued events
+        while (!eventQueue.isEmpty()) {
+            processInputEvent(eventQueue.poll());
+        }
+
+        // Reset one-frame states
+        scrollX = scrollY = 0;
     }
 
-    /**
-     * Checks if a key is currently pressed.
-     * @param key The GLFW key code
-     * @return true if the key is pressed
-     */
-    public boolean isKeyPressed(int key) {
-        return keyStates.getOrDefault(key, false);
+    public void bindCallback(String actionName, InputCallback callback) {
+        InputAction action = actions.get(actionName);
+        if (action != null) {
+            action.setCallback(callback);
+        }
     }
 
-    /**
-     * Checks if a mouse button is currently pressed.
-     * @param button The GLFW mouse button code
-     * @return true if the button is pressed
-     */
-    public boolean isMouseButtonPressed(int button) {
-        return mouseButtonStates.getOrDefault(button, false);
+    public boolean isActionPressed(String actionName) {
+        InputAction action = actions.get(actionName);
+        return action != null && action.isActive();
     }
 
-    // Getters for mouse position and scroll
+    public float getAxis(String actionName) {
+        InputAction action = actions.get(actionName);
+        return action != null ? action.getAxisValue() : 0.0f;
+    }
+
+    private void updateGamepadState(int gamepad) {
+        if (GLFW.glfwJoystickPresent(gamepad)) {
+            FloatBuffer axes = GLFW.glfwGetJoystickAxes(gamepad);
+            ByteBuffer buttons = GLFW.glfwGetJoystickButtons(gamepad);
+
+            if (axes != null) {
+                for (int i = 0; i < axes.capacity(); i++) {
+                    float value = axes.get(i);
+                    // Apply deadzone
+                    if (Math.abs(value) < 0.1f) value = 0;
+                    axisValues.put(gamepad * 100 + i, value);
+                }
+            }
+
+            if (buttons != null) {
+                for (int i = 0; i < buttons.capacity(); i++) {
+                    boolean pressed = buttons.get(i) == GLFW.GLFW_PRESS;
+                    keyStates.put(gamepad * 100 + i, pressed);
+                }
+            }
+        }
+    }
+
+    private void processInputEvent(InputEvent event) {
+        for (InputAction action : actions.values()) {
+            if (action.matchesEvent(event)) {
+                action.trigger(event);
+            }
+        }
+    }
+
+    public void setInputEnabled(boolean enabled) {
+        this.inputEnabled = enabled;
+    }
+
+    // Getters for raw input states
     public double getMouseX() { return mouseX; }
     public double getMouseY() { return mouseY; }
     public double getScrollX() { return scrollX; }
     public double getScrollY() { return scrollY; }
 }
+
+
+
+
