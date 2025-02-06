@@ -10,7 +10,7 @@ repositories {
     mavenCentral()
 }
 
-val lwjglVersion = "3.3.1"
+val lwjglVersion = "3.3.6"
 val jomlVersion = "1.10.5"
 val lwjglNatives = listOf("natives-linux", "natives-windows", "natives-macos", "natives-macos-arm64")
 

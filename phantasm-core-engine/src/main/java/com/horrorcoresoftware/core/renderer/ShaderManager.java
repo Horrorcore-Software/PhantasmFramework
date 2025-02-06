@@ -29,8 +29,8 @@ public class ShaderManager {
     public void initialize() throws Exception {
         // Load default shaders
         loadShader("default", "/shaders/default");
-        loadShader("skybox", "/shaders/skybox");
-        loadShader("terrain", "/shaders/terrain");
+//        loadShader("skybox", "/shaders/skybox");
+//        loadShader("terrain", "/shaders/terrain");
     }
 
     /**

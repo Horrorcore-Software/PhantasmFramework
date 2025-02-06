@@ -1,28 +1,24 @@
 package com.horrorcoresoftware.core.graphics;
 
 import com.horrorcoresoftware.core.resource.ResourceLoader;
-
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.stream.Collectors;
 import static org.lwjgl.opengl.GL20.*;
 
-/**
- * Loads and manages shader resources.
- */
 public class ShaderLoader implements ResourceLoader<Shader> {
 
-    /**
-     * Loads a shader program from vertex and fragment shader files.
-     * @param path The base path for shader files (without extension)
-     * @return The compiled shader program
-     * @throws Exception if loading or compilation fails
-     */
     @Override
     public Shader loadResource(String path) throws Exception {
-        String vertexPath = path + ".vert";
-        String fragmentPath = path + ".frag";
+        // Ensure path starts with '/'
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
 
         // Load shader source code
-        String vertexSource = loadShaderSource(vertexPath);
-        String fragmentSource = loadShaderSource(fragmentPath);
+        String vertexSource = loadShaderSource(path + ".vert");
+        String fragmentSource = loadShaderSource(path + ".frag");
 
         // Create shader program
         int programId = glCreateProgram();
@@ -46,13 +42,6 @@ public class ShaderLoader implements ResourceLoader<Shader> {
         return new Shader(programId);
     }
 
-    /**
-     * Compiles a shader from source code.
-     * @param type The shader type (vertex or fragment)
-     * @param source The shader source code
-     * @return The compiled shader ID
-     * @throws Exception if compilation fails
-     */
     private int compileShader(int type, String source) throws Exception {
         int shaderId = glCreateShader(type);
         glShaderSource(shaderId, source);
@@ -60,21 +49,22 @@ public class ShaderLoader implements ResourceLoader<Shader> {
 
         if (glGetShaderi(shaderId, GL_COMPILE_STATUS) == GL_FALSE) {
             String shaderType = type == GL_VERTEX_SHADER ? "vertex" : "fragment";
-            throw new Exception(shaderType + " shader compilation failed: " + glGetShaderInfoLog(shaderId));
+            String errorLog = glGetShaderInfoLog(shaderId);
+            throw new Exception(shaderType + " shader compilation failed: " + errorLog);
         }
 
         return shaderId;
     }
 
-    /**
-     * Loads shader source code from a file.
-     * @param path The shader file path
-     * @return The shader source code
-     * @throws Exception if loading fails
-     */
     private String loadShaderSource(String path) throws Exception {
-        try {
-            return new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(path)));
+        try (InputStream is = ShaderLoader.class.getResourceAsStream(path)) {
+            if (is == null) {
+                throw new Exception("Shader file not found: " + path);
+            }
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+                return reader.lines().collect(Collectors.joining("\n"));
+            }
         } catch (Exception e) {
             throw new Exception("Failed to load shader file: " + path, e);
         }
