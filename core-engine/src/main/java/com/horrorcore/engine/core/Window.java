@@ -215,20 +215,33 @@ public class Window {
     }
 
     public void cleanup() {
+        // First clean up any scene resources that might depend on the window
         scene.cleanup();
         viewportManager.cleanup();
 
-        if (framebufferSizeCallback != null) {
-            framebufferSizeCallback.free();
+        // Ensure window handle is valid before cleanup
+        if (windowHandle != NULL) {  // Usually 0 or 0L depending on your GLFW binding
+            // Free callbacks in reverse order of creation
+            if (framebufferSizeCallback != null) {
+                framebufferSizeCallback.free();
+                framebufferSizeCallback = null;  // Prevent potential double-free
+            }
+
+            // Free all remaining callbacks attached to the window
+            glfwFreeCallbacks(windowHandle);
+
+            // Destroy the window itself
+            glfwDestroyWindow(windowHandle);
+            windowHandle = NULL;  // Mark as destroyed
         }
 
-        glfwFreeCallbacks(windowHandle);
-        glfwDestroyWindow(windowHandle);
-
+        // Terminate GLFW - this should be done only once at application shutdown
         glfwTerminate();
-        GLFWErrorCallback callback = glfwSetErrorCallback(null);
-        if (callback != null) {
-            callback.free();
+
+        // Clean up the error callback last
+        GLFWErrorCallback errorCallback = glfwSetErrorCallback(null);
+        if (errorCallback != null) {
+            errorCallback.free();
         }
     }
 
