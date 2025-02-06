@@ -8,6 +8,8 @@ import com.horrorcoresoftware.core.renderer.Renderer;
 import com.horrorcoresoftware.core.resource.ResourceManager;
 import com.horrorcoresoftware.core.scene.Scene;
 import com.horrorcoresoftware.exceptions.EngineInitException;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 
 /**
  * The main engine class that manages the game loop and core systems.
@@ -61,6 +63,10 @@ public class Engine {
             window.initialize();
             logger.log(Logger.Level.DEBUG, "Engine", "Window initialized successfully");
 
+            // Initialize input system first
+            inputManager.initialize(window.getWindowHandle());
+            logger.log(Logger.Level.DEBUG, "Engine", "Input system initialized successfully");
+
             // Initialize renderer
             renderer = new Renderer(window);
             try {
@@ -105,11 +111,14 @@ public class Engine {
         logger.log(Logger.Level.INFO, "Engine", "Entering main loop");
 
         try {
-            while (isRunning) {
+            while (isRunning && !window.shouldClose()) {  // Add window close check
                 timeSystem.update();
 
                 // Process any queued events
                 eventSystem.processEvents();
+
+                // Process input
+                inputManager.update();
 
                 // Fixed timestep updates for physics and other time-critical systems
                 while (timeSystem.needsFixedUpdate()) {
@@ -122,8 +131,8 @@ public class Engine {
                 // Render with interpolation between fixed updates
                 render(timeSystem.getAlpha());
 
-                // Handle window updates
-                window.swapBufffers();
+                // Handle window updates - Fix the method name
+                window.swapBuffers();  // Use correct method name
 
                 // Performance monitoring
                 if (timeSystem.getDeltaTime() > 0.1) { // Frame took longer than 100ms
@@ -139,6 +148,7 @@ public class Engine {
 
         cleanup();
     }
+
 
     /**
      * Fixed timestep update for physics and other time-critical systems.
@@ -160,7 +170,10 @@ public class Engine {
         try {
             inputManager.update();
             currentScene.update(deltaTime);
-        } catch (Exception e) {
+            if (inputManager.isKeyPressed(GLFW.GLFW_KEY_SPACE)) {
+                logger.log(Logger.Level.DEBUG, "Engine", "Space key pressed!");
+            }
+            } catch (Exception e) {
             logger.logError("Engine", "Error during update", e);
         }
     }
@@ -173,10 +186,12 @@ public class Engine {
         try {
             renderer.beginFrame();
 
-            // Your rendering code will go here once implemented
-            // For example:
-            // renderer.getShaderManager().useShader("default");
-            // renderer.renderScene(scene, alpha);
+            // Clear the framebuffer
+            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+
+            // Your rendering code will go here
+            // For now, just set a background color so we can see something
+            GL11.glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
             renderer.endFrame();
         } catch (Exception e) {
@@ -196,6 +211,7 @@ public class Engine {
             }
 
             renderer.cleanup();
+            inputManager.cleanup(); // Add this line
             window.dispose();
             resourceManager.cleanup();
             eventSystem.cleanup();

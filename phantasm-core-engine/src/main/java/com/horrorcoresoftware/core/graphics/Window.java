@@ -1,38 +1,27 @@
 package com.horrorcoresoftware.core.graphics;
 
 import com.horrorcoresoftware.exceptions.EngineInitException;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.system.MemoryUtil.NULL;
 
-/**
- * Manages the game window and OpenGL context.
- */
 public class Window {
     private long windowHandle;
     private int width, height;
     private String title;
     private boolean resized;
+    private boolean shouldClose;
 
-    /**
-     * Creates a new window with the specified parameters.
-     * @param title The window title
-     * @param width The window width
-     * @param height The window height
-     */
     public Window(String title, int width, int height) {
         this.title = title;
         this.width = width;
         this.height = height;
         this.resized = false;
+        this.shouldClose = false;
     }
 
-    /**
-     * Initializes the window and creates the OpenGL context.
-     * @throws EngineInitException if initialization fails
-     */
     public void initialize() throws EngineInitException {
         // Initialize GLFW
         if (!glfwInit()) {
@@ -53,12 +42,14 @@ public class Window {
             throw new EngineInitException("Failed to create GLFW window");
         }
 
-        // Setup resize callback
+        // Setup callbacks
         glfwSetFramebufferSizeCallback(windowHandle, (window, width, height) -> {
             this.width = width;
             this.height = height;
             this.resized = true;
         });
+
+        glfwSetWindowCloseCallback(windowHandle, window -> this.shouldClose = true);
 
         // Make the OpenGL context current
         glfwMakeContextCurrent(windowHandle);
@@ -73,17 +64,15 @@ public class Window {
         GL.createCapabilities();
     }
 
-    /**
-     * Swaps the frame buffers and polls for window events.
-     */
     public void swapBuffers() {
         glfwSwapBuffers(windowHandle);
         glfwPollEvents();
     }
 
-    /**
-     * Disposes of the window and releases resources.
-     */
+    public boolean shouldClose() {
+        return shouldClose || glfwWindowShouldClose(windowHandle);
+    }
+
     public void dispose() {
         glfwFreeCallbacks(windowHandle);
         glfwDestroyWindow(windowHandle);
@@ -96,7 +85,4 @@ public class Window {
     public int getHeight() { return height; }
     public boolean isResized() { return resized; }
     public void setResized(boolean resized) { this.resized = resized; }
-
-    public void swapBufffers() {
-    }
 }
