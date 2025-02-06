@@ -1,12 +1,17 @@
 package com.horrorcore.engine.core;
 
+import com.horrorcore.engine.core.graphics.Camera;
 import com.horrorcore.engine.core.graphics.ViewportManager;
+import com.horrorcore.engine.core.graphics.ViewportType;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 
+import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
@@ -23,6 +28,11 @@ public class Window {
     private boolean resized;
     private ViewportManager viewportManager;
     private GLFWFramebufferSizeCallback framebufferSizeCallback;
+    private Scene scene;
+    private Camera camera;
+    private double lastMouseX, lastMouseY;
+    private boolean firstMouse = true;
+    private boolean mouseInSceneView = false;
 
     public Window(String title, int width, int height) {
         this.title = title;
@@ -97,6 +107,50 @@ public class Window {
         viewportManager.init();
         viewportManager.updateViewports(width, height);
 
+        scene = new Scene();
+        scene.setAspectRatio((float)width / height);
+
+        camera = new Camera(new Vector3f(5.0f, 5.0f, 5.0f));
+
+        // Set up mouse callbacks
+        glfwSetCursorPosCallback(windowHandle, (window, xpos, ypos) -> {
+            if (!mouseInSceneView) return;
+
+            if (firstMouse) {
+                lastMouseX = xpos;
+                lastMouseY = ypos;
+                firstMouse = false;
+                return;
+            }
+
+            float xOffset = (float) (xpos - lastMouseX);
+            float yOffset = (float) (lastMouseY - ypos); // Reversed since y-coordinates range from bottom to top
+
+            lastMouseX = xpos;
+            lastMouseY = ypos;
+
+            // Adjust sensitivity
+            xOffset *= 0.005f;
+            yOffset *= 0.005f;
+
+            camera.rotate(xOffset, yOffset);
+        });
+
+        // Set up mouse button callback to handle scene view interaction
+        glfwSetMouseButtonCallback(windowHandle, (window, button, action, mods) -> {
+            if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+                if (action == GLFW_PRESS && isMouseInSceneViewport()) {
+                    mouseInSceneView = true;
+                    glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                    firstMouse = true;
+                } else if (action == GLFW_RELEASE) {
+                    mouseInSceneView = false;
+                    glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                }
+            }
+        });
+
+
         // Set clear color
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     }
@@ -105,6 +159,7 @@ public class Window {
         // Handle window resize if needed
         if (resized) {
             viewportManager.updateViewports(width, height);
+            scene.setAspectRatio((float)width / height);
             resized = false;
         }
 
@@ -113,12 +168,46 @@ public class Window {
 
         // Draw viewport borders
         viewportManager.drawViewportBorders();
+
+        viewportManager.setViewport(ViewportType.SCENE);
+        scene.render(camera);
     }
 
     public void update() {
+        processInput();
         renderFrame();
         glfwSwapBuffers(windowHandle);
         glfwPollEvents();
+    }
+
+    private void processInput() {
+        if (!mouseInSceneView) return;
+
+        float deltaTime = 0.016f; // For simplicity, using a fixed time step
+
+        // Forward/Backward
+        if (glfwGetKey(windowHandle, GLFW_KEY_W) == GLFW_PRESS) {
+            camera.moveForward(deltaTime);
+        }
+        if (glfwGetKey(windowHandle, GLFW_KEY_S) == GLFW_PRESS) {
+            camera.moveBackward(deltaTime);
+        }
+
+        // Left/Right
+        if (glfwGetKey(windowHandle, GLFW_KEY_A) == GLFW_PRESS) {
+            camera.moveLeft(deltaTime);
+        }
+        if (glfwGetKey(windowHandle, GLFW_KEY_D) == GLFW_PRESS) {
+            camera.moveRight(deltaTime);
+        }
+
+        // Up/Down
+        if (glfwGetKey(windowHandle, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            camera.moveUp(deltaTime);
+        }
+        if (glfwGetKey(windowHandle, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            camera.moveDown(deltaTime);
+        }
     }
 
     public boolean shouldClose() {
@@ -126,6 +215,7 @@ public class Window {
     }
 
     public void cleanup() {
+        scene.cleanup();
         viewportManager.cleanup();
 
         if (framebufferSizeCallback != null) {
@@ -149,4 +239,18 @@ public class Window {
     public boolean isResized() { return resized; }
     public void setResized(boolean resized) { this.resized = resized; }
     public ViewportManager getViewportManager() { return viewportManager; }
+
+    private boolean isMouseInSceneViewport() {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            DoubleBuffer xpos = stack.mallocDouble(1);
+            DoubleBuffer ypos = stack.mallocDouble(1);
+            glfwGetCursorPos(windowHandle, xpos, ypos);
+
+            Vector4f sceneViewport = viewportManager.getSceneViewport();
+            return xpos.get(0) >= sceneViewport.x &&
+                    xpos.get(0) <= sceneViewport.x + sceneViewport.z &&
+                    ypos.get(0) >= sceneViewport.y &&
+                    ypos.get(0) <= sceneViewport.y + sceneViewport.w;
+        }
+    }
 }
