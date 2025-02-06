@@ -2,6 +2,9 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <bytecodeTargetLevel>
+      <module name="core-engine" target="17" />
+      <module name="core-engine.main" target="17" />
+      <module name="core-engine.test" target="17" />
       <module name="phantasm-core-engine" target="23" />
       <module name="phantasm-core-engine.main" target="23" />
       <module name="phantasm-core-engine.test" target="23" />
