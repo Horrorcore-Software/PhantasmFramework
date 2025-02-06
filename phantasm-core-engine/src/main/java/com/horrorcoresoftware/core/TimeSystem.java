@@ -17,6 +17,8 @@ public class TimeSystem {
     private int fpsIndex;
     private double frameTime;
     private int frameCount;
+    private static final double TARGET_FPS = 60.0;
+    private static final double FRAME_TIME = 1.0 / TARGET_FPS;
 
     public TimeSystem() {
         this.currentTime = getTime();
@@ -80,6 +82,10 @@ public class TimeSystem {
         return sum / FPS_SAMPLE_SIZE;
     }
 
+    public boolean shouldRender() {
+        return accumulator >= FRAME_TIME;
+    }
+
     /**
      * Gets interpolation factor for smooth rendering between fixed updates.
      * @return The interpolation alpha value between 0 and 1
@@ -94,4 +100,7 @@ public class TimeSystem {
     public double getTimeScale() { return timeScale; }
     public void setTimeScale(double scale) { this.timeScale = scale; }
     public void setFixedTimeStep(double step) { this.fixedTimeStep = step; }
+    public double getCurrentTime() {
+        return currentTime;
+    }
 }

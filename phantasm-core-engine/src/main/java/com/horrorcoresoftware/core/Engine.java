@@ -110,35 +110,54 @@ public class Engine {
     private void run() {
         logger.log(Logger.Level.INFO, "Engine", "Entering main loop");
 
+        double lastFpsTime = 0;
+        int fps = 0;
+
         try {
-            while (isRunning && !window.shouldClose()) {  // Add window close check
+            while (isRunning && !window.shouldClose()) {
                 timeSystem.update();
+                double currentTime = timeSystem.getCurrentTime();
 
-                // Process any queued events
+                // FPS counter
+                if (currentTime - lastFpsTime > 1.0) {
+                    logger.log(Logger.Level.DEBUG, "Engine", String.format("FPS: %d", fps));
+                    fps = 0;
+                    lastFpsTime += 1.0;
+                }
+
+                // Process events
                 eventSystem.processEvents();
-
-                // Process input
                 inputManager.update();
 
-                // Fixed timestep updates for physics and other time-critical systems
+                // Input handling
+                if (inputManager.isKeyPressed(GLFW.GLFW_KEY_ESCAPE)) {
+                    isRunning = false;
+                    continue;
+                }
+
+                // Fixed timestep updates
                 while (timeSystem.needsFixedUpdate()) {
                     fixedUpdate();
                 }
 
-                // Variable timestep update for general game logic
+                // Variable timestep update
                 update(timeSystem.getDeltaTime());
 
-                // Render with interpolation between fixed updates
+                // Render
+                renderer.beginFrame();
                 render(timeSystem.getAlpha());
+                renderer.endFrame();
 
-                // Handle window updates - Fix the method name
-                window.swapBuffers();  // Use correct method name
+                // Window update
+                window.swapBuffers();
 
-                // Performance monitoring
-                if (timeSystem.getDeltaTime() > 0.1) { // Frame took longer than 100ms
-                    logger.log(Logger.Level.WARNING, "Engine",
-                            String.format("Long frame time: %.2fms",
-                                    timeSystem.getDeltaTime() * 1000));
+                fps++;
+
+                // Small sleep to prevent CPU from maxing out
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    logger.logError("Engine", "Sleep interrupted", e);
                 }
             }
         } catch (Exception e) {
