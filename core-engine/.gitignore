@@ -23,5 +23,7 @@
 hs_err_pid*
 replay_pid*
 
-/build
-/build/*
+.gradle/
+/build/
+gradle-app.setting
+gradle-wrapper.jar
