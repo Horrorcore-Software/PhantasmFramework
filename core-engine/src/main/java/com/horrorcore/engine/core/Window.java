@@ -1,6 +1,9 @@
 package com.horrorcore.engine.core;
 
+import com.horrorcore.engine.core.graphics.ViewportManager;
 import org.lwjgl.glfw.GLFWErrorCallback;
+import org.lwjgl.glfw.GLFWFramebufferSizeCallback;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 
@@ -18,16 +21,19 @@ public class Window {
     private int height;
     private String title;
     private boolean resized;
+    private ViewportManager viewportManager;
+    private GLFWFramebufferSizeCallback framebufferSizeCallback;
 
     public Window(String title, int width, int height) {
         this.title = title;
         this.width = width;
         this.height = height;
         this.resized = false;
+        this.viewportManager = new ViewportManager();
     }
 
     public void init() {
-        // Setup an error callback to help with debugging
+        // Set up error callback
         GLFWErrorCallback.createPrint(System.err).set();
 
         // Initialize GLFW
@@ -35,60 +41,82 @@ public class Window {
             throw new IllegalStateException("Unable to initialize GLFW");
         }
 
-        // Configure GLFW window hints
+        // Configure window hints
         glfwDefaultWindowHints();
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);           // Window will stay hidden after creation
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);          // Window will be resizable
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-        // Create the window
+        // Create window
         windowHandle = glfwCreateWindow(width, height, title, NULL, NULL);
         if (windowHandle == NULL) {
-            throw new RuntimeException("Failed to create the GLFW window");
+            throw new RuntimeException("Failed to create GLFW window");
         }
 
-        // Setup resize callback
-        glfwSetFramebufferSizeCallback(windowHandle, (window, w, h) -> {
-            width = w;
-            height = h;
-            resized = true;
-        });
+        // Set up resize callback
+        framebufferSizeCallback = new GLFWFramebufferSizeCallback() {
+            @Override
+            public void invoke(long window, int width, int height) {
+                Window.this.width = width;
+                Window.this.height = height;
+                Window.this.resized = true;
+            }
+        };
+        glfwSetFramebufferSizeCallback(windowHandle, framebufferSizeCallback);
 
-        // Get the thread stack and push a new frame
+        // Center window on screen
         try (MemoryStack stack = stackPush()) {
             IntBuffer pWidth = stack.mallocInt(1);
             IntBuffer pHeight = stack.mallocInt(1);
-
-            // Get the window size passed to glfwCreateWindow
             glfwGetWindowSize(windowHandle, pWidth, pHeight);
 
-            // Center the window
+            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
             glfwSetWindowPos(
                     windowHandle,
-                    (glfwGetVideoMode(glfwGetPrimaryMonitor()).width() - pWidth.get(0)) / 2,
-                    (glfwGetVideoMode(glfwGetPrimaryMonitor()).height() - pHeight.get(0)) / 2
+                    (vidmode.width() - pWidth.get(0)) / 2,
+                    (vidmode.height() - pHeight.get(0)) / 2
             );
         }
 
-        // Make the OpenGL context current
+        // Make OpenGL context current
         glfwMakeContextCurrent(windowHandle);
 
         // Enable v-sync
         glfwSwapInterval(1);
 
-        // Make the window visible
+        // Make window visible
         glfwShowWindow(windowHandle);
 
-        // Initialize OpenGL context
+        // Initialize OpenGL
         GL.createCapabilities();
 
-        // Set the clear color
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        // Initialize viewport manager
+        viewportManager.init();
+        viewportManager.updateViewports(width, height);
+
+        // Set clear color
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    }
+
+    public void renderFrame() {
+        // Handle window resize if needed
+        if (resized) {
+            viewportManager.updateViewports(width, height);
+            resized = false;
+        }
+
+        // Clear buffers
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Draw viewport borders
+        viewportManager.drawViewportBorders();
     }
 
     public void update() {
+        renderFrame();
         glfwSwapBuffers(windowHandle);
         glfwPollEvents();
     }
@@ -98,6 +126,12 @@ public class Window {
     }
 
     public void cleanup() {
+        viewportManager.cleanup();
+
+        if (framebufferSizeCallback != null) {
+            framebufferSizeCallback.free();
+        }
+
         glfwFreeCallbacks(windowHandle);
         glfwDestroyWindow(windowHandle);
 
@@ -114,4 +148,5 @@ public class Window {
     public int getHeight() { return height; }
     public boolean isResized() { return resized; }
     public void setResized(boolean resized) { this.resized = resized; }
+    public ViewportManager getViewportManager() { return viewportManager; }
 }
