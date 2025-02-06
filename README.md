@@ -4,76 +4,98 @@ A modern, high-performance Java game engine built with LWJGL. Developed by Horro
 
 ## Features
 
-- Modern OpenGL rendering pipeline
+- Modern OpenGL 3.3 Core Profile rendering
 - Scene graph system with component-based architecture
-- Event-driven input system supporting keyboard, mouse, and gamepads
-- Resource management with automatic reference counting
-- Configuration system with JSON support
-- Comprehensive logging and debugging facilities
+- Editor interface with multiple viewports (Scene, Hierarchy, Inspector)
+- Camera system with orbit controls
+- Grid visualization for scene editing
 - Cross-platform support (Windows, Linux, macOS)
+- Window management and input handling
 
 ## Dependencies
 
-- Java 17 or higher
-- LWJGL 3.3.1
-- JOML 1.10.5 (Java OpenGL Math Library)
-- JBullet Physics Engine
-- libGDX Scene2D (UI Framework)
-- Gson 2.10.1 (JSON parsing)
+- **Java 17** or higher
+- **LWJGL 3.3.6** (OpenGL, GLFW bindings)
+- **JOML 1.10.8** (Java OpenGL Math Library)
 
 ## Project Structure
 
-```
-com.horrorcoresoftware
-├── core            # Core engine systems
-│   ├── config     # Configuration management
-│   ├── graphics   # Rendering and graphics
-│   ├── input      # Input handling
-│   ├── resource   # Resource management
-│   ├── scene      # Scene graph
-│   └── events     # Event system
-└── game           # Game-specific implementations
-```
+com.horrorcore.engine
+├── core
+│ ├── graphics # Rendering systems (Camera, Shaders, Viewports)
+│ ├── scene # Scene management and GameObject system
+│ └── components # Component architecture (Transform, etc.)
+└── editor # Editor implementation
+└── viewports # Viewport management system
 
-## Usage Example
+## Getting Started
 
+1. Clone the repository
+2. Build with Gradle:
+```bash
+./gradlew build
+```
+Run the editor
 ```java
-public class MyGame {
-    public static void main(String[] args) {
-        Engine engine = new Engine();
-        engine.initialize();
-        
-        Scene scene = new Scene();
-        GameObject player = new GameObject("player");
-        scene.addGameObject(player);
-        
-        engine.setScene(scene);
-        engine.start();
+public class Main {
+public static void main(String[] args) {
+Window window = new Window("Phantasm Engine Editor", 1280, 720);
+window.init();
+
+        // Main loop
+        while (!window.shouldClose()) {
+            window.update();
+        }
+        window.cleanup();
     }
 }
 ```
 
-# Development Roadmap
+## Key Components
+### GameObject System
 
-## Near-term Features
-- Physics system integration with JBullet
-- Audio system with OpenAL
-- Material system with PBR support
-- Particle system
-- Animation system with skeletal animation support
+```java
+GameObject player = new GameObject("Player");
+player.addComponent(new Transform());
+scene.addGameObject(player);
+```
 
-## Medium-term Features
-- Editor tools and GUI
-- Scripting system
-- Asset pipeline and packaging
-- Network multiplayer support
-- Post-processing effects
-- Dynamic shadows
+## Camera Controls
+ - WASD: Movement
 
-## Long-term Features
-- Ray tracing support
-- Advanced AI systems
-- Visual scripting
-- Performance profiling tools
-- Level streaming
-- Advanced physics simulation
+ - Right Click + Drag: Rotate view
+
+ - Space/Shift: Vertical movement
+
+ - Mouse Wheel: Zoom
+
+## Development Roadmap
+### Near-term Features
+ - Physics system integration
+
+ - Material system
+
+ - Basic lighting system
+
+ - Asset import pipeline
+
+### Medium-term Features
+ - Particle system
+
+ - Animation system
+
+ - Post-processing effects
+
+ - Improved editor tools
+
+### Long-term Features
+ - Scripting system
+
+ - Network support
+
+ - Advanced profiling tools
+
+ - VR support
+
+### License
+Proprietary - © 2024 Horrorcore Software. All rights reserved.
