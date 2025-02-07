@@ -152,13 +152,21 @@ public class Window {
 
             if (button == GLFW_MOUSE_BUTTON_RIGHT) {
                 // Right mouse button controls camera
-                if (action == GLFW_PRESS) {
+                if (action == GLFW_PRESS && isMouseInSceneViewport()) {
                     mouseInSceneView = true;
                     glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     firstMouse = true;
                 } else if (action == GLFW_RELEASE) {
                     mouseInSceneView = false;
                     glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                    // Reset cursor position to prevent camera jump
+                    try (MemoryStack stack = MemoryStack.stackPush()) {
+                        DoubleBuffer xpos = stack.mallocDouble(1);
+                        DoubleBuffer ypos = stack.mallocDouble(1);
+                        glfwGetCursorPos(windowHandle, xpos, ypos);
+                        lastMouseX = xpos.get(0);
+                        lastMouseY = ypos.get(0);
+                    }
                 }
             } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
                 // Left mouse button handles object selection
