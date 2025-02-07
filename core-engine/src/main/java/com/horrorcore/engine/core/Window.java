@@ -116,6 +116,7 @@ public class Window {
         scene.setAspectRatio((float)width / height);
 
         camera = new Camera(new Vector3f(5.0f, 5.0f, 5.0f));
+        scene.setCamera(camera);
 
         // Set up mouse callbacks
         glfwSetCursorPosCallback(windowHandle, (window, xpos, ypos) -> {
@@ -143,14 +144,35 @@ public class Window {
 
         // Set up mouse button callback to handle scene view interaction
         glfwSetMouseButtonCallback(windowHandle, (window, button, action, mods) -> {
+            if (!isMouseInSceneViewport()) return;
+
             if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-                if (action == GLFW_PRESS && isMouseInSceneViewport()) {
+                // Right mouse button controls camera
+                if (action == GLFW_PRESS) {
                     mouseInSceneView = true;
                     glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
                     firstMouse = true;
                 } else if (action == GLFW_RELEASE) {
                     mouseInSceneView = false;
                     glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                }
+            } else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+                // Left mouse button handles object selection
+                try (MemoryStack stack = MemoryStack.stackPush()) {
+                    // Get current mouse position
+                    DoubleBuffer xpos = stack.mallocDouble(1);
+                    DoubleBuffer ypos = stack.mallocDouble(1);
+                    glfwGetCursorPos(windowHandle, xpos, ypos);
+
+                    // Get scene viewport dimensions
+                    Vector4f sceneViewport = viewportManager.getSceneViewport();
+
+                    // Handle object selection
+                    scene.handleMouseClick(
+                            (float)xpos.get(0), (float)ypos.get(0),
+                            sceneViewport.x, sceneViewport.y,
+                            sceneViewport.z, sceneViewport.w
+                    );
                 }
             }
         });

@@ -4,6 +4,7 @@ import com.horrorcore.engine.core.graphics.Camera;
 import com.horrorcore.engine.core.components.MeshRenderer;
 import com.horrorcore.engine.core.graphics.Mesh;
 import com.horrorcore.engine.core.graphics.MeshGenerator;
+import com.horrorcore.engine.core.input.MousePicker;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import java.nio.FloatBuffer;
@@ -22,6 +23,8 @@ public class Scene {
 
     // List to track all GameObjects in the scene
     private final List<GameObject> gameObjects;
+    private GameObject selectedObject;  // Track the currently selected object
+    private MousePicker mousePicker;    // Mouse picking system for selection
 
     // Grid configuration
     private static final int GRID_SIZE = 20;  // Grid will extend from -10 to +10 on X and Z
@@ -32,6 +35,7 @@ public class Scene {
         projectionMatrix = new Matrix4f();
         viewMatrix = new Matrix4f();
         gameObjects = new ArrayList<>();
+        mousePicker = new MousePicker(null, projectionMatrix);
 
         createGrid();
         initializeShader();
@@ -194,6 +198,71 @@ public class Scene {
                 renderer.render();
             }
         }
+    }
+
+    public void setCamera(Camera camera) {
+        mousePicker = new MousePicker(camera, projectionMatrix);
+    }
+
+    public void handleMouseClick(float mouseX, float mouseY, float viewportX, float viewportY,
+                                 float viewportWidth, float viewportHeight) {
+        // Update the mouse picker with current mouse coordinates
+        mousePicker.update(mouseX, mouseY, viewportX, viewportY, viewportWidth, viewportHeight);
+
+        // Try to select an object
+        GameObject nearestObject = null;
+        float nearestDistance = Float.MAX_VALUE;
+
+        for (GameObject obj : gameObjects) {
+            Vector3f objPosition = obj.getTransform().getPosition();
+            if (mousePicker.isPointNearRay(objPosition, 0.5f)) { // 0.5f is the selection radius
+                float distance = objPosition.distance(mousePicker.getCurrentRay());
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestObject = obj;
+                }
+            }
+        }
+
+        // Update selection
+        if (nearestObject != null) {
+            selectObject(nearestObject);
+        } else {
+            clearSelection();
+        }
+    }
+
+    public void selectObject(GameObject object) {
+        // Clear previous selection
+        if (selectedObject != null) {
+            MeshRenderer renderer = selectedObject.getComponent(MeshRenderer.class);
+            if (renderer != null) {
+                renderer.setColor(0.2f, 0.5f, 0.8f); // Reset to default color
+            }
+        }
+
+        // Set new selection
+        selectedObject = object;
+
+        // Highlight selected object
+        MeshRenderer renderer = selectedObject.getComponent(MeshRenderer.class);
+        if (renderer != null) {
+            renderer.setColor(1.0f, 0.5f, 0.0f); // Orange highlight for selected object
+        }
+    }
+
+    public void clearSelection() {
+        if (selectedObject != null) {
+            MeshRenderer renderer = selectedObject.getComponent(MeshRenderer.class);
+            if (renderer != null) {
+                renderer.setColor(0.2f, 0.5f, 0.8f); // Reset to default color
+            }
+        }
+        selectedObject = null;
+    }
+
+    public GameObject getSelectedObject() {
+        return selectedObject;
     }
 
     public void cleanup() {
