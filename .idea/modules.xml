@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.horrorcore.core-engine.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.horrorcore.core-engine.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.horrorcore.core-engine.test.iml" filepath="$PROJECT_DIR$/.idea/modules/com.horrorcore.core-engine.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/core-engine.iml" filepath="$PROJECT_DIR$/core-engine.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/core-engine.main.iml" filepath="$PROJECT_DIR$/.idea/modules/core-engine.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/core-engine.test.iml" filepath="$PROJECT_DIR$/.idea/modules/core-engine.test.iml" />

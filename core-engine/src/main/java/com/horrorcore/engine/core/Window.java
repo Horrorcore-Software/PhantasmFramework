@@ -84,11 +84,16 @@ public class Window {
             glfwGetWindowSize(windowHandle, pWidth, pHeight);
 
             GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-            glfwSetWindowPos(
-                    windowHandle,
-                    (vidmode.width() - pWidth.get(0)) / 2,
-                    (vidmode.height() - pHeight.get(0)) / 2
-            );
+            if (vidmode != null) {
+                // Check if we're not on Wayland
+                if (!"wayland".equals(System.getenv("XDG_SESSION_TYPE"))) {
+                    glfwSetWindowPos(
+                            windowHandle,
+                            (vidmode.width() - pWidth.get(0)) / 2,
+                            (vidmode.height() - pHeight.get(0)) / 2
+                    );
+                }
+            }
         }
 
         // Make OpenGL context current
