@@ -25,20 +25,23 @@ public class Scene {
     private final List<GameObject> gameObjects;
     private GameObject selectedObject;  // Track the currently selected object
     private MousePicker mousePicker;    // Mouse picking system for selection
+    private final Camera camera;
 
     // Grid configuration
     private static final int GRID_SIZE = 20;  // Grid will extend from -10 to +10 on X and Z
     private static final float GRID_SPACING = 1.0f;
     private static final Vector3f GRID_COLOR = new Vector3f(0.5f, 0.5f, 0.5f);
 
-    public Scene() {
+    public Scene(Camera camera) {
         projectionMatrix = new Matrix4f();
         viewMatrix = new Matrix4f();
         gameObjects = new ArrayList<>();
         mousePicker = new MousePicker(null, projectionMatrix);
-
+        this.camera = camera;
         createGrid();
         initializeShader();
+
+        mousePicker = new MousePicker(camera, projectionMatrix);
 
         // Create a test cube
         GameObject cube = new GameObject("TestCube");
@@ -200,14 +203,25 @@ public class Scene {
         }
     }
 
-    public void setCamera(Camera camera) {
-        mousePicker = new MousePicker(camera, projectionMatrix);
-    }
 
     public void handleMouseClick(float mouseX, float mouseY, float viewportX, float viewportY,
                                  float viewportWidth, float viewportHeight) {
-        // Update the mouse picker with current mouse coordinates
-        mousePicker.update(mouseX, mouseY, viewportX, viewportY, viewportWidth, viewportHeight);
+        // Convert window coordinates to viewport coordinates
+        float viewportMouseX = mouseX - viewportX;
+        float viewportMouseY = mouseY - viewportY;
+
+        // Skip if mouse is outside viewport
+        if (viewportMouseX < 0 || viewportMouseX > viewportWidth ||
+                viewportMouseY < 0 || viewportMouseY > viewportHeight) {
+            return;
+        }
+
+        // Update the mouse picker with viewport-adjusted coordinates
+        mousePicker.update(viewportMouseX, viewportMouseY, 0, 0, viewportWidth, viewportHeight);
+
+        // Debug output
+        System.out.println("Mouse click at viewport coordinates: " + viewportMouseX + ", " + viewportMouseY);
+        System.out.println("Ray direction: " + mousePicker.getCurrentRay());
 
         // Try to select an object
         GameObject nearestObject = null;
@@ -215,8 +229,9 @@ public class Scene {
 
         for (GameObject obj : gameObjects) {
             Vector3f objPosition = obj.getTransform().getPosition();
-            if (mousePicker.isPointNearRay(objPosition, 0.5f)) { // 0.5f is the selection radius
-                float distance = objPosition.distance(mousePicker.getCurrentRay());
+            if (mousePicker.isPointNearRay(objPosition, 1.0f)) { // Increased selection radius for easier picking
+                float distance = objPosition.distance(camera.getPosition());
+                System.out.println("Object " + obj.getName() + " is near ray at distance " + distance);
                 if (distance < nearestDistance) {
                     nearestDistance = distance;
                     nearestObject = obj;
@@ -226,8 +241,10 @@ public class Scene {
 
         // Update selection
         if (nearestObject != null) {
+            System.out.println("Selected object: " + nearestObject.getName());
             selectObject(nearestObject);
         } else {
+            System.out.println("No object selected");
             clearSelection();
         }
     }

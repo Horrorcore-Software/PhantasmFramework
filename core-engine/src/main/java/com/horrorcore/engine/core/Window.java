@@ -117,11 +117,10 @@ public class Window {
         viewportManager.init();
         viewportManager.updateViewports(width, height);
 
-        scene = new Scene();
-        scene.setAspectRatio((float)width / height);
 
         camera = new Camera(new Vector3f(5.0f, 5.0f, 5.0f));
-        scene.setCamera(camera);
+        scene = new Scene(camera);
+        scene.setAspectRatio((float)width / height);
 
         // Set up mouse callbacks
         glfwSetCursorPosCallback(windowHandle, (window, xpos, ypos) -> {
