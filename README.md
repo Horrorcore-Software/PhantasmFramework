@@ -97,5 +97,8 @@ scene.addGameObject(player);
 
  - VR support
 
-### License
-Proprietary - © 2024 Horrorcore Software. All rights reserved.
+## License
+This project is licensed under the GNU General Public License v3.0.
+© 2024 Horrorcore Software. All rights reserved.
+
+For more details, see the LICENSE file.
