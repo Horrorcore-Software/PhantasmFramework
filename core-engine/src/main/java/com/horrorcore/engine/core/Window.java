@@ -103,6 +103,11 @@ public class Window {
         // Initialize OpenGL
         GL.createCapabilities();
 
+        // Enable depth testing and face culling for proper 3D rendering
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
         // Initialize viewport manager
         viewportManager.init();
         viewportManager.updateViewports(width, height);
