@@ -68,15 +68,28 @@ public class ViewportManager {
     }
 
     public void renderViewports() {
-        // First render the scene viewport
-        glViewport((int)sceneViewport.x, (int)sceneViewport.y,
-                (int)sceneViewport.z, (int)sceneViewport.w);
+        // Clear the entire window first
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Then render the borders
+        // Render scene viewport
+        setViewport(ViewportType.SCENE);
+        // Scene rendering code...
+
+        // Render hierarchy viewport
+        setViewport(ViewportType.HIERARCHY);
+        // Hierarchy rendering code...
+
+        // Render inspector viewport - with proper state management
+        if (selectedObject != null) {
+            setViewport(ViewportType.INSPECTOR);
+            inspectorPanel.render(selectedObject,
+                    (int)inspectorViewport.z,
+                    (int)inspectorViewport.w);
+        }
+
+        // Render borders last
+        glViewport(0, 0, currentWidth, currentHeight);
         renderBorders();
-
-        // Finally render the inspector panel
-        renderInspectorPanel();
     }
 
     private void renderBorders() {
@@ -136,8 +149,11 @@ public class ViewportManager {
             case INSPECTOR -> inspectorViewport;
         };
 
-        glViewport((int)viewport.x, (int)viewport.y,
-                (int)viewport.z, (int)viewport.w);
+        // Ensure we're setting valid viewport dimensions
+        if (viewport.z > 0 && viewport.w > 0) {
+            glViewport((int)viewport.x, (int)viewport.y,
+                    (int)viewport.z, (int)viewport.w);
+        }
     }
 
     public void setSelectedObject(GameObject object) {
