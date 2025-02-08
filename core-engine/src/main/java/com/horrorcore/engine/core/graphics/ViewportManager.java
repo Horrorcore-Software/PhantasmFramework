@@ -1,5 +1,6 @@
 package com.horrorcore.engine.core.graphics;
 
+import com.horrorcore.engine.core.editor.InspectorPanel;
 import org.joml.Vector4f;
 import java.nio.FloatBuffer;
 import org.lwjgl.system.MemoryStack;
@@ -22,12 +23,14 @@ public class ViewportManager {
     private LineShader lineShader;
     private int vaoId;
     private int vboId;
+    private InspectorPanel inspectorPanel;
 
     public ViewportManager() {
         sceneViewport = new Vector4f();
         hierarchyViewport = new Vector4f();
         inspectorViewport = new Vector4f();
         lineShader = new LineShader();
+        inspectorPanel = new InspectorPanel();
     }
 
     public void init() {
@@ -115,6 +118,8 @@ public class ViewportManager {
 
             // Reset shader state
             glUseProgram(0);
+            setViewport(ViewportType.INSPECTOR);
+            inspectorPanel.render(null, (int)inspectorViewport.z, (int)inspectorViewport.w);
         }
     }
 
