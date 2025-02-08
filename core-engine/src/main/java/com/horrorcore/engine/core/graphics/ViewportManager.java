@@ -1,5 +1,6 @@
 package com.horrorcore.engine.core.graphics;
 
+import com.horrorcore.engine.core.GameObject;
 import com.horrorcore.engine.core.editor.InspectorPanel;
 import org.joml.Vector4f;
 import java.nio.FloatBuffer;
@@ -24,6 +25,7 @@ public class ViewportManager {
     private int vaoId;
     private int vboId;
     private InspectorPanel inspectorPanel;
+    private GameObject selectedObject;
 
     public ViewportManager() {
         sceneViewport = new Vector4f();
@@ -82,6 +84,10 @@ public class ViewportManager {
                 (int)viewport.z, (int)viewport.w);
     }
 
+    public void setSelectedObject(GameObject object) {
+        this.selectedObject = object;
+    }
+
     public void drawViewportBorders() {
         // Only draw borders if we have valid dimensions
         if (currentWidth <= 0 || currentHeight <= 0) return;
@@ -119,7 +125,7 @@ public class ViewportManager {
             // Reset shader state
             glUseProgram(0);
             setViewport(ViewportType.INSPECTOR);
-            inspectorPanel.render(null, (int)inspectorViewport.z, (int)inspectorViewport.w);
+            inspectorPanel.render(selectedObject, (int)inspectorViewport.z, (int)inspectorViewport.w);
         }
     }
 
