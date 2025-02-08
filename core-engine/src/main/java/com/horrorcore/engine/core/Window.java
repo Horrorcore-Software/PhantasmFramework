@@ -205,8 +205,10 @@ public class Window {
         // Clear buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Update selected object
+        viewportManager.setSelectedObject(scene.getSelectedObject());  // Add this line
+
         // Draw viewport borders
-        viewportManager.setSelectedObject(scene.getSelectedObject());
         viewportManager.drawViewportBorders();
 
         viewportManager.setViewport(ViewportType.SCENE);

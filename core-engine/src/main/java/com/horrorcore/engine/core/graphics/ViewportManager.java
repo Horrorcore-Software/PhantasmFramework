@@ -92,6 +92,8 @@ public class ViewportManager {
         // Only draw borders if we have valid dimensions
         if (currentWidth <= 0 || currentHeight <= 0) return;
 
+        glViewport(0, 0, currentWidth, currentHeight);
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
             // Calculate line positions for borders
             float[] lineVertices = {
@@ -124,9 +126,11 @@ public class ViewportManager {
 
             // Reset shader state
             glUseProgram(0);
-            setViewport(ViewportType.INSPECTOR);
-            inspectorPanel.render(selectedObject, (int)inspectorViewport.z, (int)inspectorViewport.w);
+
         }
+        setViewport(ViewportType.INSPECTOR);
+        glEnable(GL_DEPTH_TEST);
+        inspectorPanel.render(selectedObject, (int)inspectorViewport.z, (int)inspectorViewport.w);
     }
 
     public void cleanup() {

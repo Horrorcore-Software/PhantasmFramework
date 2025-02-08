@@ -11,6 +11,9 @@ public class InspectorPanel {
             return;
         }
 
+        // Save current OpenGL state
+        boolean depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
+
         // Draw inspector background
         glDisable(GL_DEPTH_TEST);
         glBegin(GL_QUADS);
@@ -30,6 +33,9 @@ public class InspectorPanel {
         glVertex2f(0, viewportHeight);
         glEnd();
 
-        glEnable(GL_DEPTH_TEST);
+        // Restore previous OpenGL state
+        if (depthTestEnabled) {
+            glEnable(GL_DEPTH_TEST);
+        }
     }
 }
