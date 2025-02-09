@@ -28,16 +28,13 @@ public class ScenePanel extends Panel {
     @Override
     public void render() {
         beginRender();
-
         // Render the 3D scene
         glEnable(GL_DEPTH_TEST);
         scene.render(camera);
         glDisable(GL_DEPTH_TEST);
-
         // Render scene overlay text
         float[] textColor = {1.0f, 1.0f, 1.0f, 0.8f};
         textRenderer.renderText("Scene View", 10, height - 30, 1.2f, textColor);
-
         // Camera controls help
         float yPos = 60;
         textRenderer.renderText("Controls:", 10, yPos, 1.0f, textColor);
@@ -47,7 +44,6 @@ public class ScenePanel extends Panel {
         textRenderer.renderText("WASD: Move Camera", 20, yPos, 0.9f, textColor);
         yPos -= 20;
         textRenderer.renderText("Space/Shift: Up/Down", 20, yPos, 0.9f, textColor);
-
         endRender();
     }
 
