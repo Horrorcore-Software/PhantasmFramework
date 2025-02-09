@@ -1,14 +1,11 @@
 package com.horrorcore.engine.core.graphics;
 
 import com.horrorcore.engine.core.GameObject;
-import com.horrorcore.engine.core.editor.InspectorPanel;
 import org.joml.Vector4f;
 import java.nio.FloatBuffer;
 import org.lwjgl.system.MemoryStack;
 
 import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
 
 public class ViewportManager {
     private static final float SCENE_VIEW_WIDTH_PERCENT = 0.7f;
@@ -24,7 +21,6 @@ public class ViewportManager {
     private LineShader lineShader;
     private int vaoId;
     private int vboId;
-    private InspectorPanel inspectorPanel;
     private GameObject selectedObject;
 
     public ViewportManager() {
@@ -32,7 +28,6 @@ public class ViewportManager {
         hierarchyViewport = new Vector4f();
         inspectorViewport = new Vector4f();
         lineShader = new LineShader();
-        inspectorPanel = new InspectorPanel();
     }
 
     public void init() {
@@ -51,7 +46,6 @@ public class ViewportManager {
         glBindVertexArray(0);
 
         // Initialize inspector panel
-        inspectorPanel.init();
     }
 
     public void updateViewports(int windowWidth, int windowHeight) {
@@ -82,9 +76,7 @@ public class ViewportManager {
         // Render inspector viewport - with proper state management
         if (selectedObject != null) {
             setViewport(ViewportType.INSPECTOR);
-            inspectorPanel.render(selectedObject,
-                    (int)inspectorViewport.z,
-                    (int)inspectorViewport.w);
+
         }
 
         // Render borders last
@@ -134,7 +126,6 @@ public class ViewportManager {
         glDisable(GL_DEPTH_TEST);
 
         // Render inspector panel
-        inspectorPanel.render(selectedObject, (int)inspectorViewport.z, (int)inspectorViewport.w);
 
         // Restore depth testing if it was enabled
         if (depthTestEnabled) {
@@ -162,7 +153,6 @@ public class ViewportManager {
 
     public void cleanup() {
         lineShader.cleanup();
-        inspectorPanel.cleanup();
         glDeleteBuffers(vboId);
         glDeleteVertexArrays(vaoId);
     }
