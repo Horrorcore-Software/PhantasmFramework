@@ -82,9 +82,9 @@ public class ViewportManager {
         glDisable(GL_BLEND);
     }
 
-//    public void setSelectedObject(GameObject object) {
-//        inspectorPanel.setSelectedObject(object);
-//    }
+    public void setSelectedObject(GameObject object) {
+        inspectorPanel.setSelectedObject(object);
+    }
 
     public void cleanup() {
         scenePanel.cleanup();

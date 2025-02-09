@@ -55,4 +55,8 @@ public class InspectorPanel extends Panel {
 
         endRender();
     }
+
+    public void setSelectedObject(GameObject object) {
+        this.selectedObject = object;
+    }
 }
