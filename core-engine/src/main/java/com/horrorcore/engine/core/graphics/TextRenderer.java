@@ -2,78 +2,51 @@ package com.horrorcore.engine.core.graphics;
 
 import org.lwjgl.system.MemoryStack;
 import java.nio.FloatBuffer;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
 public class TextRenderer {
-    private int vaoId;
-    private int vboId;
     private int shaderProgram;
-    private boolean isInitialized = false;
+    private int vao;
+    private int vbo;
+    private static final float CHAR_WIDTH = 10.0f;  // Width of each character
+    private static final float CHAR_HEIGHT = 16.0f; // Height of each character
 
     public void init() {
-        if (isInitialized) return;
+        // Create shader program
+        shaderProgram = createShaderProgram();
 
-        // Create VAO and VBO
-        vaoId = glGenVertexArrays();
-        vboId = glGenBuffers();
+        // Create VAO and VBO for character quads
+        vao = glGenVertexArrays();
+        vbo = glGenBuffers();
 
-        // Create and compile shaders
-        initShaders();
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-        isInitialized = true;
+        // Position attribute
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, 4 * Float.BYTES, 0);
+        glEnableVertexAttribArray(0);
+
+        // Color attribute
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, 4 * Float.BYTES, 2 * Float.BYTES);
+        glEnableVertexAttribArray(1);
     }
 
-    public void renderText(String text, float x, float y, float scale, float[] color) {
-        if (!isInitialized) return;
-
-        glUseProgram(shaderProgram);
-        glBindVertexArray(vaoId);
-
-        // For each character, create a quad
-        float xpos = x;
-        for (char c : text.toCharArray()) {
-            renderCharacter(c, xpos, y, scale, color);
-            xpos += 8.0f * scale; // Simple fixed-width character spacing
-        }
-
-        glBindVertexArray(0);
-        glUseProgram(0);
-    }
-
-    private void renderCharacter(char c, float x, float y, float scale, float[] color) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            // Simple quad for each character
-            float[] vertices = {
-                    x, y,
-                    x + 8.0f * scale, y,
-                    x + 8.0f * scale, y + 12.0f * scale,
-                    x, y + 12.0f * scale
-            };
-
-            FloatBuffer vertexBuffer = stack.mallocFloat(8);
-            vertexBuffer.put(vertices).flip();
-
-            glBindBuffer(GL_ARRAY_BUFFER, vboId);
-            glBufferData(GL_ARRAY_BUFFER, vertexBuffer, GL_DYNAMIC_DRAW);
-
-            int colorLoc = glGetUniformLocation(shaderProgram, "textColor");
-            glUniform4f(colorLoc, color[0], color[1], color[2], color[3]);
-
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        }
-    }
-
-    private void initShaders() {
+    private int createShaderProgram() {
         // Vertex shader
         int vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, """
             #version 330 core
             layout (location = 0) in vec2 aPos;
-            uniform vec2 viewportSize;
+            layout (location = 1) in vec2 aTexCoord;
+            uniform vec2 screenSize;
             
             void main() {
-                vec2 normalizedPos = (aPos / viewportSize) * 2.0 - 1.0;
-                gl_Position = vec4(normalizedPos, 0.0, 1.0);
+                vec2 pos = (aPos / screenSize) * 2.0 - 1.0;
+                pos.y = -pos.y;
+                gl_Position = vec4(pos, 0.0, 1.0);
             }
         """);
         glCompileShader(vertexShader);
@@ -92,21 +65,80 @@ public class TextRenderer {
         glCompileShader(fragmentShader);
 
         // Link shaders
-        shaderProgram = glCreateProgram();
+        int shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram, vertexShader);
         glAttachShader(shaderProgram, fragmentShader);
         glLinkProgram(shaderProgram);
 
-        // Cleanup
+        // Clean up
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
+
+        return shaderProgram;
+    }
+
+    public void renderText(String text, float x, float y, float scale, float[] color) {
+        glUseProgram(shaderProgram);
+        glBindVertexArray(vao);
+
+        // Enable blending for text
+        boolean blendEnabled = glIsEnabled(GL_BLEND);
+        if (!blendEnabled) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
+
+        // Set text color
+        glUniform4f(glGetUniformLocation(shaderProgram, "textColor"),
+                color[0], color[1], color[2], color[3]);
+
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer verticesBuffer = stack.mallocFloat(6 * 4); // 6 vertices per char, 4 components per vertex
+
+            float xpos = x;
+            for (char c : text.toCharArray()) {
+                // Calculate character quad
+                float x1 = xpos;
+                float x2 = xpos + CHAR_WIDTH * scale;
+                float y1 = y;
+                float y2 = y + CHAR_HEIGHT * scale;
+
+                // Two triangles to form a quad
+                float[] vertices = {
+                        // positions    // texture coords
+                        x1, y1,        0.0f, 0.0f,  // bottom left
+                        x2, y1,        1.0f, 0.0f,  // bottom right
+                        x2, y2,        1.0f, 1.0f,  // top right
+                        x1, y1,        0.0f, 0.0f,  // bottom left
+                        x2, y2,        1.0f, 1.0f,  // top right
+                        x1, y2,        0.0f, 1.0f   // top left
+                };
+
+                verticesBuffer.clear();
+                verticesBuffer.put(vertices);
+                verticesBuffer.flip();
+
+                glBindBuffer(GL_ARRAY_BUFFER, vbo);
+                glBufferData(GL_ARRAY_BUFFER, verticesBuffer, GL_DYNAMIC_DRAW);
+
+                glDrawArrays(GL_TRIANGLES, 0, 6);
+
+                xpos += CHAR_WIDTH * scale; // Advance cursor
+            }
+        }
+
+        // Restore blend state
+        if (!blendEnabled) {
+            glDisable(GL_BLEND);
+        }
+
+        glBindVertexArray(0);
+        glUseProgram(0);
     }
 
     public void cleanup() {
-        if (!isInitialized) return;
         glDeleteProgram(shaderProgram);
-        glDeleteBuffers(vboId);
-        glDeleteVertexArrays(vaoId);
-        isInitialized = false;
+        glDeleteBuffers(vbo);
+        glDeleteVertexArrays(vao);
     }
 }
