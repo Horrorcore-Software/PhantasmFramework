@@ -99,6 +99,6 @@ scene.addGameObject(player);
 
 ## License
 This project is licensed under the GNU General Public License v3.0.
-© 2024 Horrorcore Software. All rights reserved.
+© 2025 Horrorcore Software. All rights reserved.
 
 For more details, see the LICENSE file.
