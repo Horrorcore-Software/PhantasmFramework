@@ -2,84 +2,73 @@ package com.horrorcore.engine.core.graphics;
 
 import com.horrorcore.engine.core.GameObject;
 import com.horrorcore.engine.core.Scene;
-import com.horrorcore.engine.core.ui.HierarchyPanel;
-import com.horrorcore.engine.core.ui.InspectorPanel;
-import com.horrorcore.engine.core.ui.Panel;
-import com.horrorcore.engine.core.ui.ScenePanel;
+import com.horrorcore.engine.core.ui.*;
 import org.joml.Vector4f;
 
-import static org.lwjgl.opengl.GL11.*;
-
 public class ViewportManager {
-    private static final float SCENE_VIEW_WIDTH_PERCENT = 0.7f;
-    private static final float HIERARCHY_WIDTH_PERCENT = 0.15f;
-    private static final float INSPECTOR_WIDTH_PERCENT = 0.15f;
+    private static final float SCENE_WIDTH_PERCENT = 0.7f;
+    private static final float SIDE_PANEL_WIDTH_PERCENT = 0.15f;
 
     private ScenePanel scenePanel;
     private HierarchyPanel hierarchyPanel;
     private InspectorPanel inspectorPanel;
     private Scene scene;
     private Camera camera;
-
-    private int currentWidth;
-    private int currentHeight;
+    private LayoutManager layout;
 
     public ViewportManager(Scene scene, Camera camera) {
         this.scene = scene;
         this.camera = camera;
+        this.layout = new LayoutManager();
     }
 
     public void init() {
-        // Panels will be properly positioned in updateViewports
-        scenePanel = new ScenePanel(0, 0, 100, 100, scene, camera);
+        // Set initial window size
+        Panel.setWindowDimensions(1280, 720);  // Default size
+
+        // Define layout areas
+        layout.defineArea("hierarchy", 0.0f, 0.0f, SIDE_PANEL_WIDTH_PERCENT, 1.0f);
+        layout.defineArea("scene", SIDE_PANEL_WIDTH_PERCENT, 0.0f, SCENE_WIDTH_PERCENT, 1.0f);
+        layout.defineArea("inspector", SIDE_PANEL_WIDTH_PERCENT + SCENE_WIDTH_PERCENT, 0.0f,
+                SIDE_PANEL_WIDTH_PERCENT, 1.0f);
+
+        // Create and initialize panels
         hierarchyPanel = new HierarchyPanel(0, 0, 100, 100, scene);
+        scenePanel = new ScenePanel(0, 0, 100, 100, scene, camera);
         inspectorPanel = new InspectorPanel(0, 0, 100, 100);
 
-        scenePanel.init();
         hierarchyPanel.init();
+        scenePanel.init();
         inspectorPanel.init();
+
+        // Add panels to layout
+        layout.addPanel("hierarchy", hierarchyPanel);
+        layout.addPanel("scene", scenePanel);
+        layout.addPanel("inspector", inspectorPanel);
+
+        // Set initial layout size
+        layout.setSize(1280, 720);
     }
 
-    public void updateViewports(int windowWidth, int windowHeight) {
-        this.currentWidth = windowWidth;
-        this.currentHeight = windowHeight;
 
-        // Update global window dimensions for panels
+    public void updateViewports(int windowWidth, int windowHeight) {
+        System.out.println("Updating viewports to: " + windowWidth + "x" + windowHeight);
+
+        // Update window dimensions in Panel class
         Panel.setWindowDimensions(windowWidth, windowHeight);
 
-        float hierarchyWidth = windowWidth * HIERARCHY_WIDTH_PERCENT;
-        float sceneWidth = windowWidth * SCENE_VIEW_WIDTH_PERCENT;
-        float inspectorWidth = windowWidth * INSPECTOR_WIDTH_PERCENT;
-
-        // Debug output
-        System.out.println("Window dimensions: " + windowWidth + "x" + windowHeight);
-        System.out.println("Hierarchy panel: x=0, width=" + hierarchyWidth);
-        System.out.println("Scene panel: x=" + hierarchyWidth + ", width=" + sceneWidth);
-        System.out.println("Inspector panel: x=" + (hierarchyWidth + sceneWidth) + ", width=" + inspectorWidth);
-
-        hierarchyPanel.setDimensions(0, 0, hierarchyWidth, windowHeight);
-        scenePanel.setDimensions(hierarchyWidth, 0, sceneWidth, windowHeight);
-        inspectorPanel.setDimensions(hierarchyWidth + sceneWidth, 0, inspectorWidth, windowHeight);
+        // Update layout with new window dimensions
+        layout.setSize(windowWidth, windowHeight);
 
         // Update scene aspect ratio
-        scene.setAspectRatio(sceneWidth / windowHeight);
+        Vector4f sceneDimensions = layout.getAreaDimensions("scene");
+        if (sceneDimensions != null) {
+            scene.setAspectRatio(sceneDimensions.z / sceneDimensions.w);
+        }
     }
 
     public void renderViewports() {
-        // Clear the entire window first
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Enable blending for UI
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        // Render panels in order
-        hierarchyPanel.render();
-        scenePanel.render();
-        inspectorPanel.render();
-
-        // Disable blending
-        glDisable(GL_BLEND);
+        layout.render();
     }
 
     public void setSelectedObject(GameObject object) {
@@ -87,18 +76,10 @@ public class ViewportManager {
     }
 
     public void cleanup() {
-        scenePanel.cleanup();
-        hierarchyPanel.cleanup();
-        inspectorPanel.cleanup();
+        layout.cleanup();
     }
 
-    // Getter methods
     public Vector4f getSceneViewportDimensions() {
-        return new Vector4f(
-                HIERARCHY_WIDTH_PERCENT * currentWidth,
-                0,
-                SCENE_VIEW_WIDTH_PERCENT * currentWidth,
-                currentHeight
-        );
+        return layout.getAreaDimensions("scene");
     }
 }

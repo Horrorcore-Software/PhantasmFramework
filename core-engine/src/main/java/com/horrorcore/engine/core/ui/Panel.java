@@ -20,8 +20,8 @@ public abstract class Panel {
     protected int vao;
     protected int vbo;
     protected int shaderProgram;
-    protected static float currentWidth;  // Window width
-    protected static float currentHeight;
+    protected static float windowWidth;  // Renamed for clarity
+    protected static float windowHeight;
 
     public Panel(float x, float y, float width, float height) {
         this.x = x;
@@ -32,38 +32,44 @@ public abstract class Panel {
     }
 
     public void init() {
-        // Create VAO and VBO for the panel background
+        // Create VAO and VBO
         vao = glGenVertexArrays();
         vbo = glGenBuffers();
 
-        // Create and compile shaders
+        // Bind VAO first
+        glBindVertexArray(vao);
+
+        // Bind VBO and allocate memory
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, 12 * Float.BYTES, GL_DYNAMIC_DRAW);
+
+        // Setup vertex attributes (position)
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * Float.BYTES, 0);
+        glEnableVertexAttribArray(0);
+
+        // Unbind
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+
+        // Create shaders after VAO/VBO setup
         createShaders();
 
-        // Set up vertex attributes
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(0);
+        System.out.println(getClass().getSimpleName() + " initialized with VAO: " + vao + ", VBO: " + vbo);
     }
 
     private void createShaders() {
-        // Vertex shader for panel background
         int vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, """
             #version 330 core
             layout (location = 0) in vec2 aPos;
-            uniform vec2 screenSize;
             
             void main() {
-                vec2 normalizedPos = aPos / screenSize;  // Convert to 0-1 range
-                normalizedPos = normalizedPos * 2.0 - 1.0;  // Convert to -1 to 1 range
-                normalizedPos.y = -normalizedPos.y;  // Flip Y coordinate
-                gl_Position = vec4(normalizedPos, 0.0, 1.0);
+                gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);
             }
         """);
         glCompileShader(vertexShader);
+        checkShaderCompilation(vertexShader, "vertex");
 
-        // Fragment shader for panel background
         int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragmentShader, """
             #version 330 core
@@ -75,16 +81,32 @@ public abstract class Panel {
             }
         """);
         glCompileShader(fragmentShader);
+        checkShaderCompilation(fragmentShader, "fragment");
 
-        // Create and link shader program
         shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram, vertexShader);
         glAttachShader(shaderProgram, fragmentShader);
         glLinkProgram(shaderProgram);
+        checkProgramLinking(shaderProgram);
 
-        // Clean up shaders
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
+    }
+
+    private void checkShaderCompilation(int shader, String type) {
+        int success = glGetShaderi(shader, GL_COMPILE_STATUS);
+        if (success != GL_TRUE) {
+            String infoLog = glGetShaderInfoLog(shader);
+            System.err.println(type + " shader compilation failed: " + infoLog);
+        }
+    }
+
+    private void checkProgramLinking(int program) {
+        int success = glGetProgrami(program, GL_LINK_STATUS);
+        if (success != GL_TRUE) {
+            String infoLog = glGetProgramInfoLog(program);
+            System.err.println("Program linking failed: " + infoLog);
+        }
     }
 
     public void setBackgroundColor(float r, float g, float b, float a) {
@@ -92,53 +114,79 @@ public abstract class Panel {
     }
 
     protected void renderBackground() {
+        // Safety check
+        if (windowWidth <= 0 || windowHeight <= 0) return;
+
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            // Define quad vertices using window coordinates
-            float[] vertices = {
-                    x, y,                    // Bottom-left
-                    x + width, y,            // Bottom-right
-                    x + width, y + height,   // Top-right
-                    x, y + height            // Top-left
+            float left = (x / windowWidth) * 2.0f - 1.0f;
+            float right = ((x + width) / windowWidth) * 2.0f - 1.0f;
+            float bottom = 1.0f - ((y + height) / windowHeight) * 2.0f;
+            float top = 1.0f - (y / windowHeight) * 2.0f;
+
+            // Two triangles for a quad
+            float[] vertices = new float[] {
+                    // First triangle
+                    left, bottom,    // Bottom-left
+                    right, bottom,   // Bottom-right
+                    right, top,      // Top-right
+                    // Second triangle
+                    left, bottom,    // Bottom-left
+                    right, top,      // Top-right
+                    left, top        // Top-left
             };
 
-            FloatBuffer vertexBuffer = stack.mallocFloat(8);
+            // Debug vertices
+            System.out.println(String.format("%s vertices: BL(%.2f,%.2f), BR(%.2f,%.2f), TR(%.2f,%.2f), TL(%.2f,%.2f)",
+                    getClass().getSimpleName(), left, bottom, right, bottom, right, top, left, top));
+
+            FloatBuffer vertexBuffer = stack.mallocFloat(12);
             vertexBuffer.put(vertices).flip();
 
-            // Update vertex buffer
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferData(GL_ARRAY_BUFFER, vertexBuffer, GL_STATIC_DRAW);
-
-            // Use shader and set uniforms
+            // Use our shader program
             glUseProgram(shaderProgram);
 
-            // Pass the full window size, not just panel size
-            glUniform2f(glGetUniformLocation(shaderProgram, "screenSize"),
-                    currentWidth, currentHeight);
-            glUniform4f(glGetUniformLocation(shaderProgram, "backgroundColor"),
-                    backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
+            // Update the background color
+            int colorLoc = glGetUniformLocation(shaderProgram, "backgroundColor");
+            glUniform4f(colorLoc, backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
 
-            // Draw background quad
+            // Update the vertex data
             glBindVertexArray(vao);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertexBuffer);
+
+            // Draw the triangles
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            // Cleanup
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
             glBindVertexArray(0);
             glUseProgram(0);
         }
     }
 
     protected void beginRender() {
-        // Set viewport
-        glViewport((int)x, (int)y, (int)width, (int)height);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        // Enable scissor test to clip rendering to panel area
+        // Set viewport and scissor
+        glViewport((int)x, (int)(windowHeight - y - height), (int)width, (int)height);
         glEnable(GL_SCISSOR_TEST);
-        glScissor((int)x, (int)y, (int)width, (int)height);
+        glScissor((int)x, (int)(windowHeight - y - height), (int)width, (int)height);
 
-        // Render panel background
+        // Clear the panel area
+        float[] tempColor = new float[4];
+        glGetFloatv(GL_COLOR_CLEAR_VALUE, tempColor);
+        glClearColor(backgroundColor.x, backgroundColor.y, backgroundColor.z, backgroundColor.w);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(tempColor[0], tempColor[1], tempColor[2], tempColor[3]);
+
+        // Render the actual background
         renderBackground();
     }
 
     protected void endRender() {
         glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_BLEND);
     }
 
     public void setDimensions(float x, float y, float width, float height) {
@@ -161,7 +209,8 @@ public abstract class Panel {
     }
 
     public static void setWindowDimensions(float width, float height) {
-        currentWidth = width;
-        currentHeight = height;
+        System.out.println("Setting window dimensions: " + width + "x" + height);
+        windowWidth = width;
+        windowHeight = height;
     }
 }
