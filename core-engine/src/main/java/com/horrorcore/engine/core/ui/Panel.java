@@ -20,8 +20,8 @@ public abstract class Panel {
     protected int vao;
     protected int vbo;
     protected int shaderProgram;
-    protected static float windowWidth;  // Renamed for clarity
-    protected static float windowHeight;
+    public static float windowWidth;  // Renamed for clarity
+    public static float windowHeight;
 
     public Panel(float x, float y, float width, float height) {
         this.x = x;
@@ -165,6 +165,8 @@ public abstract class Panel {
     }
 
     protected void beginRender() {
+        System.out.println("Panel dimensions: x=" + x + ", y=" + y +
+                ", width=" + width + ", height=" + height);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

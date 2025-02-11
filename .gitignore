@@ -1,2 +1,4 @@
 .idea/
 *.log
+/core-engine/.settings/org.eclipse.buildship.core.prefs
+/core-engine/.settings/org.eclipse.jdt.core.prefs

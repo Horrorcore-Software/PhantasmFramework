@@ -16,11 +16,20 @@ public class InspectorPanel extends Panel {
     }
 
     @Override
+    public void init() {
+        super.init();
+        textRenderer.init();
+    }
+
+    @Override
     public void render() {
         beginRender();
 
         float yPos = height - 30;
         float[] textColor = {1.0f, 1.0f, 1.0f, 1.0f};
+        textRenderer.setPanelPosition(x, y);
+
+        textRenderer.renderText("Test Text", 10, yPos, 1.2f, textColor);
 
         // Header
         textRenderer.renderText("Inspector", 10, yPos, 1.2f, textColor);
@@ -58,5 +67,13 @@ public class InspectorPanel extends Panel {
 
     public void setSelectedObject(GameObject object) {
         this.selectedObject = object;
+    }
+
+    @Override
+    public void cleanup() {
+        super.cleanup();
+        if (textRenderer != null) {
+            textRenderer.cleanup();
+        }
     }
 }
